@@ -15,7 +15,8 @@
 #include "brzo_i2c.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /*
@@ -87,7 +88,6 @@ typedef void * h_hdc1080;
  */
 #define HDC1080_REG_CONFIG_READ_MASK		0b1011111100000000
 
-
 /**
  * @brief      Setup instance of HDC1080 sensor I2C slave device
  *
@@ -103,12 +103,8 @@ typedef void * h_hdc1080;
  * @return     hdc1080_t, NULL:indicates failure,
  *             valid pointer value indicates success.
  */
-h_hdc1080 hdc1080_setup(
-		h_brzo_i2c_bus i2c_bus,
-		uint8_t i2c_address,
-		uint16_t i2c_frequency,
-		uint16_t i2c_ack_timeout);
-
+h_hdc1080 hdc1080_setup(h_brzo_i2c_bus i2c_bus, uint8_t i2c_address,
+		uint16_t i2c_frequency, uint16_t i2c_ack_timeout);
 
 /**
  * @brief      Release instance of HDC1080 sensor I2C slave device
@@ -119,7 +115,6 @@ h_hdc1080 hdc1080_setup(
  * @return     void.
  */
 void hdc1080_free(h_hdc1080 sensor);
-
 
 /*
  * @brief      Read value from register
@@ -135,7 +130,6 @@ void hdc1080_free(h_hdc1080 sensor);
  */
 bool hdc1080_get_reg(h_hdc1080 sensor, uint8_t reg, uint16_t *p_pata);
 
-
 /*
  * @brief      Write value to register
  *
@@ -150,7 +144,6 @@ bool hdc1080_get_reg(h_hdc1080 sensor, uint8_t reg, uint16_t *p_pata);
  */
 bool hdc1080_set_reg(h_hdc1080 sensor, uint8_t reg, uint16_t data);
 
-
 /*
  * @brief      Read value from status register
  *
@@ -162,7 +155,6 @@ bool hdc1080_set_reg(h_hdc1080 sensor, uint8_t reg, uint16_t data);
  * @return     TRUE if read success, FALSE if read fails.
  */
 bool hdc1080_get_status(h_hdc1080 sensor, uint16_t *p_pata);
-
 
 /*
  * @brief      Write value to configuration register
@@ -176,7 +168,6 @@ bool hdc1080_get_status(h_hdc1080 sensor, uint16_t *p_pata);
  */
 bool hdc1080_set_config(h_hdc1080 sensor, uint16_t data);
 
-
 /*
  * @brief      Read temperature value
  *
@@ -189,7 +180,6 @@ bool hdc1080_set_config(h_hdc1080 sensor, uint16_t data);
  */
 bool hdc1080_get_temperature(h_hdc1080 sensor, float *p_pata);
 
-
 /*
  * @brief      Read humidity value
  *
@@ -201,7 +191,6 @@ bool hdc1080_get_temperature(h_hdc1080 sensor, float *p_pata);
  * @return     TRUE if read success, FALSE if read fails.
  */
 bool hdc1080_get_humidity(h_hdc1080 sensor, float *p_pata);
-
 
 /*
  * @brief      Read raw temperature and humidity value
@@ -219,7 +208,6 @@ bool hdc1080_get_humidity(h_hdc1080 sensor, float *p_pata);
  */
 bool hdc1080_get_raw(h_hdc1080 sensor, uint32_t *p_pata);
 
-
 /*
  * @brief      Get sensor manufacturer ID
  *
@@ -230,7 +218,6 @@ bool hdc1080_get_raw(h_hdc1080 sensor, uint32_t *p_pata);
  */
 uint16_t hdc1080_get_manufacturer(h_hdc1080 sensor);
 
-
 /*
  * @brief      Get sensor device ID
  *
@@ -240,7 +227,6 @@ uint16_t hdc1080_get_manufacturer(h_hdc1080 sensor);
  * @return     Device ID (always 0x1050 = Texas instruments).
  */
 uint16_t hdc1080_get_device(h_hdc1080 sensor);
-
 
 /*
  * @brief      Get sensor serial number
