@@ -44,7 +44,7 @@
 #include <stdlib.h>
 #include <freertos/FreeRTOS.h>
 
-#include "ccs811.h"
+#include "../include/ccs811_.h"
 
 #if defined(CCS811_DEBUG_LEVEL_2)
 #define debug(s, f, ...) printf("%s %s: " s "\n", "CCS811", f, ## __VA_ARGS__)
