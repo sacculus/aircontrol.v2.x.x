@@ -192,7 +192,7 @@ uint32_t ccs811_get_ntc_resistance(h_ccs811 sensor, uint32_t resistance);
  * temperature and humidity changes.
  *
  * @param  [in] sensor
- *              pointer to the sensor device data structure
+ *              Handler of CCS811 sensor I2C slave device instance
  * @param  [in] temperature
  *              measured temperature in degree Celsius
  * @param  [in] humidity
@@ -204,7 +204,7 @@ bool ccs811_set_environmental_data(h_ccs811 sensor, float temperature,
 		float humidity);
 
 /**
- * @brief   Enable or disable data ready interrupt signal *nINT*
+ * @brief       Enable or disable data ready interrupt signal *nINT*
  *
  * At the end of each measurement cycle (250ms, 1s, 10s, 60s), CCS811 can
  * optionally trigger an interrupt. The signal *nINT* is driven low as soon
@@ -213,15 +213,17 @@ bool ccs811_set_environmental_data(h_ccs811 sensor, float temperature,
  *
  * The interrupt is disabled by default.
  *
- * @param  sensor   pointer to the sensor device data structure
- * @param  enabled  if true, the interrupt is enabled, or disabled otherwise
+ * @param  [in] sensor
+ *              Handler of CCS811 sensor I2C slave device instance
+ * @param  [in] enabled
+ *              If TRUE, the interrupt is enabled, or disabled otherwise
  *
- * @return          true on success, false on error
+ * @return      TRUE on success, FALSE on error
  */
-bool ccs811_enable_interrupt(h_ccs811 sensor, bool enabled);
+bool ccs811_set_interrupt(h_ccs811 sensor, bool enabled);
 
 /*
- * @brief   Set eCO2 threshold mode for data ready interrupts
+ * @brief       Set eCO2 threshold mode for data ready interrupts
  *
  * The user task can choose that the data ready interrupt is not generated
  * every time when new sensor values become ready but only if the eCO2 value
@@ -239,31 +241,40 @@ bool ccs811_enable_interrupt(h_ccs811 sensor, bool enabled);
  *
  * The interrupt is disabled by default.
  *
- * @param  sensor      pointer to the sensor device data structure
- * @param  low         threshold LOW to MEDIUM  (>  400, default 1500)
- * @param  high        threshold MEDIUM to HIGH (< 8192, default 2500)
- * @param  hysteresis  hysteresis value (default 50)
+ * @param  [in] sensor
+ *              Handler of CCS811 sensor I2C slave device instance
+ * @param  [in] low
+ *              Threshold LOW to MEDIUM  (>  400, default 1500)
+ * @param  [in] high
+ *              Threshold MEDIUM to HIGH (< 8192, default 2500)
+ * @param  [in] hysteresis
+ *              Hysteresis value (default 50)
  *
- * @return             true on success, false on error
+ * @return      TRUE on success, FALSE on error
  */
-bool ccs811_set_eco2_thresholds(h_ccs811 sensor, uint16_t low, uint16_t high,
+bool ccs811_set_interrupt_thresholds(
+		h_ccs811 sensor,
+		uint16_t low,
+		uint16_t high,
 		uint8_t hysteresis);
 
 /*
- * @brief   Get the current baseline value from sensor
+ * @brief       Get the current baseline value from sensor
  *
  * The sensor supports automatic baseline correction over a minimum time of
  * 24 hours. Using this function, the current baseline value can be saved
  * before the sensor is powered down. This baseline can then be restored after
  * sensor is powered up again to continue the automatic baseline process.
  *
- * @param  sensor      pointer to the sensor device data structure
- * @return             current baseline value on success, or 0 on error
+ * @param  [in] sensor
+ *              Handler of CCS811 sensor I2C slave device instance
+ *
+ * @return      Current baseline value on success, or 0 on error
  */
 uint16_t ccs811_get_baseline(h_ccs811 sensor);
 
 /*
- * @brief   Write a previously stored baseline value to the sensor
+ * @brief       Write a previously stored baseline value to the sensor
  *
  * The sensor supports automatic baseline correction over a minimum time of
  * 24 hours. Using this function, a previously saved baseline value be
@@ -273,9 +284,11 @@ uint16_t ccs811_get_baseline(h_ccs811 sensor);
  * Please note: The baseline must be written after the conditioning period
  * of 20 min after power up.
  *
- * @param  sensor      pointer to the sensor device data structure
- * @param  basline     baseline to be set
- * @return             true on success, false on error
+ * @param  [in] sensor
+ *              Handler of CCS811 sensor I2C slave device instance
+ * @param  [in] basline
+ *              Value of baseline to be set
+ * @return      TRUE on success, FALSE on error
  */
 bool ccs811_set_baseline(h_ccs811 sensor, uint16_t baseline);
 

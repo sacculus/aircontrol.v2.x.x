@@ -15,7 +15,7 @@
 #include "hdc1080.h"
 
 /*
- * Structure that describes sensor instance
+ * Structure that describes HDC1080 sensor instance
  */
 typedef struct
 {
