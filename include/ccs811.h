@@ -74,8 +74,12 @@ typedef void * h_ccs811;
  * @return      h_ccs811, NULL value indicates failure,
  *              any valid pointer value indicates success.
  */
-h_ccs811 ccs811_setup(h_brzo_i2c_bus i2c_bus, uint8_t i2c_address,
-		uint16_t i2c_frequency, uint16_t i2c_ack_timeout);
+h_ccs811 ccs811_setup(
+		h_brzo_i2c_bus i2c_bus,
+		uint8_t i2c_address,
+		uint16_t i2c_frequency,
+		uint16_t i2c_ack_timeout,
+		bool reset_at_start);
 
 /**
  * @brief       Release instance of CCS811 sensor I2C slave device
@@ -86,6 +90,18 @@ h_ccs811 ccs811_setup(h_brzo_i2c_bus i2c_bus, uint8_t i2c_address,
  * @return      void.
  */
 void ccs811_free(h_ccs811 sensor);
+
+/*
+ * @brief       Get sensor internal error code
+ *
+ * @param [in]  sensor
+ *              Handler of CCS811 sensor I2C slave device instance
+ *
+ * @return      void.
+ *
+ * TODO: Complete "ccs811_get_error()" function
+ */
+uint8_t ccs811_get_error_code(h_ccs811 *sensor);
 
 /**
  * @brief 	    Set the operation mode of the sensor
