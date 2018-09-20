@@ -545,9 +545,53 @@ bool ccs811_set_threshold_interrupt(
 	return FALSE;
 }
 
-uint16_t ICACHE_FLASH_ATTR ccs811_get_baseline(h_ccs811 sensor);
+uint16_t ICACHE_FLASH_ATTR ccs811_get_baseline(h_ccs811 sensor)
+{
+	/*
+	 * Check if sensor handler is valid
+	 */
+	if (sensor == NULL)
+		return FALSE;
 
-bool ICACHE_FLASH_ATTR ccs811_set_baseline(h_ccs811 sensor, uint16_t baseline);
+	ccs811_device_t *s = (ccs811_device_t *) sensor;
+
+	union {
+		  uint8_t b[2];
+		  uint16_t w;
+	} buff;
+
+	if (ccs811_get_ntc_reg(s, CCS811_REG_BASELINE, 2, buff.b))
+	{
+		return buff.w;
+	}
+
+	return 0;
+}
+
+bool ICACHE_FLASH_ATTR ccs811_set_baseline(h_ccs811 sensor, uint16_t baseline)
+{
+	/*
+	 * Check if sensor handler is valid
+	 */
+	if (sensor == NULL)
+		return FALSE;
+
+	ccs811_device_t *s = (ccs811_device_t *) sensor;
+
+	union {
+		  uint8_t b[2];
+		  uint16_t w;
+	} buff;
+
+	buff.w = baseline;
+
+	if (ccs811_get_ntc_reg(s, CCS811_REG_BASELINE, 2, buff.b))
+	{
+		return TRUE;
+	}
+
+	return false;
+}
 
 
 bool ICACHE_FLASH_ATTR ccs811_get_reg(
