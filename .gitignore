@@ -1,0 +1,6 @@
+/.output/
+/build_output/
+/.settings/
+/.scannerwork/
+/make.log
+/sonar-project.properties

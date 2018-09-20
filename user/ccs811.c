@@ -151,7 +151,7 @@ h_ccs811 ICACHE_FLASH_ATTR ccs811_setup(
 		bool reset_at_start)
 {
 	ccs811_device_t *sensor = NULL;
-    ccs811_reg_status_t status;
+    ccs811_reg_status_t reg_status;
     const static uint8_t reset_sequence[4] = { 0x11, 0xe5, 0x72, 0x8a };
 
 	if ((sensor = os_malloc(sizeof(ccs811_device_t))) != NULL)
@@ -195,23 +195,23 @@ h_ccs811 ICACHE_FLASH_ATTR ccs811_setup(
 		 *
 		 * Read the sensor status register
 		 */
-		if (ccs811_get_reg(sensor, CCS811_REG_STATUS, 1, &(status.data)))
+		if (ccs811_get_reg(sensor, CCS811_REG_STATUS, 1, &(reg_status.data)))
 		{
 			/*
 			 * Check if sensor reported an error
 			 */
-			if (!status.error)
+			if (!reg_status.error)
 			{
 				/*
 				 * Check if sensor is in bootloader mode,
 				 * it has to switch to the application mode first
 				 */
-				if (!(status.fw_mode))
+				if (!(reg_status.fw_mode))
 				{
 					/*
 					 * Check whether valid application firmware is loaded
 					 */
-					if (status.app_valid)
+					if (reg_status.app_valid)
 					{
 						/*
 						 * Switch to application mode
@@ -231,12 +231,12 @@ h_ccs811 ICACHE_FLASH_ATTR ccs811_setup(
 		/*
 		 * Get the status to check whether sensor switched to application mode
 		 */
-		if (ccs811_get_reg(sensor, CCS811_REG_STATUS, 1, &(status.data)))
+		if (ccs811_get_reg(sensor, CCS811_REG_STATUS, 1, &(reg_status.data)))
 		{
 			/*
 			 * Check if sensor is in application mode
 			 */
-			if ((status.fw_mode) && (status.app_valid))
+			if ((reg_status.fw_mode) && (reg_status.app_valid))
 			{
 				/*
 				 * Init sensor ID data - hardware ID and version, firmware,
@@ -268,9 +268,9 @@ void ICACHE_FLASH_ATTR ccs811_free(h_ccs811 sensor)
 	os_free(s);
 }
 
-bool ICACHE_FLASH_ATTR ccs811_set_mode(h_ccs811 sensor, ccs811_mode_t mode)
+bool ICACHE_FLASH_ATTR ccs811_set_mode(h_ccs811 sensor, ccs811_measure_mode_t mode)
 {
-	ccs811_reg_mode_t reg;
+	ccs811_reg_mode_t reg_mode;
 
 	/*
 	 * Check if sensor handler is valid
@@ -283,12 +283,12 @@ bool ICACHE_FLASH_ATTR ccs811_set_mode(h_ccs811 sensor, ccs811_mode_t mode)
 	/*
 	 * Get current register value
 	 */
-	if (ccs811_get_reg(s, CCS811_REG_MEAS_MODE, 1, &(reg.data)))
+	if (ccs811_get_reg(s, CCS811_REG_MEAS_MODE, 1, &(reg_mode.data)))
 	{
 		/*
 		 * Check if new mode is different from current sensor mode
 		 */
-		if (mode == reg.mode)
+		if (mode == reg_mode.mode)
 		{
 			return true;
 		}
@@ -296,12 +296,12 @@ bool ICACHE_FLASH_ATTR ccs811_set_mode(h_ccs811 sensor, ccs811_mode_t mode)
 		/*
 		 * Set new mode
 		 */
-		reg.mode = mode;
+		reg_mode.mode = mode;
 
 		/*
 		 * Write new value to sensor register
 		 */
-		if (ccs811_set_reg(s, CCS811_REG_MEAS_MODE, 1, &(reg.data)))
+		if (ccs811_set_reg(s, CCS811_REG_MEAS_MODE, 1, &(reg_mode.data)))
 		{
 			return true;
 		}
@@ -318,7 +318,7 @@ bool ICACHE_FLASH_ATTR ccs811_get_results(
 		uint16_t *p_voltage)
 {
 	uint8_t buff[8];
-	ccs811_reg_status_t status;
+	ccs811_reg_status_t reg_status;
 
 	/*
 	 * Check if sensor handler is valid
@@ -330,9 +330,18 @@ bool ICACHE_FLASH_ATTR ccs811_get_results(
 
 	if (ccs811_get_reg(s, CCS811_REG_ALG_RESULT_DATA, 8, buff))
 	{
-		status.data = buff[4];
-		if (!(status.error) && (status.data_ready))
+		/*
+		 * 4-th byte contains value of status register
+		 */
+		reg_status.data = buff[4];
+		/*
+		 * Check if not error and data ready
+		 */
+		if (!(reg_status.error) && (reg_status.data_ready))
 		{
+			/*
+			 * Convert measured values from data has read
+			 */
 			*p_eco2 = buff[0] *256 + buff[1];
 			*p_tvoc = buff[2] *256 + buff[3];
 			*p_current = (buff[6] >> 2) & 0x3f;
@@ -340,11 +349,11 @@ bool ICACHE_FLASH_ATTR ccs811_get_results(
 
 			return TRUE;
 		}
-		if (status.error)
+		if (reg_status.error)
 		{
 			ccs811_get_reg(s, CCS811_REG_ERROR_ID, 1, &(s->error));
 		}
-		// TODO: Process NO data stateS
+		// TODO: Process NO data state
 	}
 
 	return FALSE;
@@ -352,20 +361,189 @@ bool ICACHE_FLASH_ATTR ccs811_get_results(
 
 uint32_t ICACHE_FLASH_ATTR ccs811_get_ntc_resistance(
 		h_ccs811 sensor,
-		uint32_t resistance);
+		uint32_t resistance)
+{
+	uint8_t data[4];
+
+	/*
+	 * Check if sensor handler is valid
+	 */
+	if (sensor == NULL)
+		return 0;
+
+	ccs811_device_t *s = (ccs811_device_t *) sensor;
+
+    /*
+     * Read baseline register
+     */
+    if (ccs811_get_reg(s, CCS811_REG_NTC, 4, data))
+    {
+    	/*
+    	 * Calculate value according to application note ams AN000372
+    	 */
+    	uint16_t v_ref = (uint16_t)(data[0]) << 8 | data[1];
+    	uint16_t v_ntc = (uint16_t)(data[2]) << 8 | data[3];
+
+    	return (v_ntc * resistance / v_ref);
+    }
+
+    return 0;
+}
 
 bool ICACHE_FLASH_ATTR ccs811_set_environmental_data(
 		h_ccs811 sensor,
 		float temperature,
-		float humidity);
+		float humidity)
+{
+	/*
+	 * Check if sensor handler is valid
+	 */
+	if (sensor == NULL)
+		return FALSE;
 
-bool ICACHE_FLASH_ATTR ccs811_set_interrupt(h_ccs811 sensor, bool enabled);
+	ccs811_device_t *s = (ccs811_device_t *) sensor;
 
-bool ccs811_set_interrupt_thresholds(
+    uint16_t temp = (temperature + 25) * 512;   // -25 °C maps to 0
+    uint16_t hum  = humidity * 512;
+
+    // fill environmental data
+    uint8_t data[4]  = { temp >> 8, temp & 0xff,
+                         hum  >> 8, hum  & 0xff };
+
+    // send environmental data to the sensor
+    if (ccs811_set_reg(s, CCS811_REG_ENV_DATA, 4, data))
+    {
+    	return TRUE;
+    }
+
+	return FALSE;
+}
+
+bool ICACHE_FLASH_ATTR ccs811_set_data_interrupt(h_ccs811 sensor, bool enabled)
+{
+	/*
+	 * Check if sensor handler is valid
+	 */
+	if (sensor == NULL)
+		return FALSE;
+
+	ccs811_device_t *s = (ccs811_device_t *) sensor;
+
+    ccs811_reg_mode_t mode_reg;
+
+    /*
+     * Read current measurement mode register value
+     */
+    if (ccs811_get_reg(s, CCS811_REG_MEAS_MODE, 1, (uint8_t *) &mode_reg))
+    {
+    	/*
+    	 * There is nothing to do if interrupt flag not changes
+    	 */
+    	if (enabled == (bool) mode_reg.int_dataready) return TRUE;
+
+    	mode_reg.int_dataready = (enabled) ? 1 : 0;
+    	/*
+    	 * If interrupt disabled that threshold interrupt must
+    	 * not be enabled too
+    	 */
+    	if (!enabled) mode_reg.int_threshold  = 0;
+
+    	/*
+    	 * Write back measurement mode register
+    	 */
+    	if (ccs811_set_reg(s, CCS811_REG_MEAS_MODE, 1, (uint8_t *) &mode_reg))
+    	{
+    		return TRUE;
+    	}
+    }
+
+	return FALSE;
+}
+
+bool ccs811_set_threshold_interrupt(
 		h_ccs811 sensor,
 		uint16_t low,
 		uint16_t high,
-		uint8_t hysteresis);
+		uint8_t hysteresis)
+{
+	/*
+	 * Check if sensor handler is valid
+	 */
+	if (sensor == NULL)
+		return FALSE;
+
+	ccs811_device_t *s = (ccs811_device_t *) sensor;
+
+    ccs811_reg_mode_t reg_mode;
+    uint8_t buff[5] = { 0, 0, 0, 0, 0 };
+
+    /*
+     * Read current measurement mode register value
+     */
+    if (ccs811_get_reg(s, CCS811_REG_MEAS_MODE, 1, (uint8_t *) &reg_mode))
+    {
+    	/*
+    	 * Check whether interrupt has to be enabled
+    	 */
+    	if (low && high && hysteresis)
+    	{
+    	    /*
+    	     * Validate ranges of threshold values
+    	     */
+    	    if (low < CCS_ECO2_RANGE_MIN
+    	    		|| high > CCS_ECO2_RANGE_MAX
+					|| low > high
+					|| !hysteresis)
+    	    	return FALSE;
+
+    	    /*
+    	     * Fill values in buffer
+    	     */
+    	    buff[0] = low  >> 8;
+    	    buff[1] = low  & 0xff;
+    	    buff[2] = high >> 8;
+    	    buff[3] = high & 0xff;
+    	    buff[4] = hysteresis;
+
+    	    /*
+    	     * Write new threshold values into register
+    	     */
+    	    if (ccs811_set_reg(s, CCS811_REG_THRESHOLDS, 5, buff))
+    	    {
+    	    	reg_mode.int_dataready = 1;
+    	    	reg_mode.int_threshold = 1;
+    	    	if (ccs811_set_reg(s, CCS811_REG_MEAS_MODE, 1, (uint8_t *) &reg_mode))
+    	    		return TRUE;
+    	    }
+    	}
+    	else
+    	{
+        	/*
+        	 * One or more values is zero - threshold interrupt should be disabled
+        	 */
+    	    /*
+    	     * Clean values in buffer
+    	     */
+    	    buff[0] = 0;
+    	    buff[1] = 0;
+    	    buff[2] = 0;
+    	    buff[3] = 0;
+    	    buff[4] = 0;
+
+    	    /*
+    	     * Write zero values into threshold register
+    	     */
+    	    if (ccs811_set_reg(s, CCS811_REG_THRESHOLDS, 5, buff))
+    	    {
+    	    	reg_mode.int_threshold = 0;
+    	    	if (ccs811_set_reg(s, CCS811_REG_MEAS_MODE, 1, (uint8_t *) &reg_mode))
+    	    		return TRUE;
+    	    }
+    	}
+    }
+
+	return FALSE;
+}
 
 uint16_t ICACHE_FLASH_ATTR ccs811_get_baseline(h_ccs811 sensor);
 

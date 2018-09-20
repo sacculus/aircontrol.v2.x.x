@@ -45,12 +45,20 @@
  */
 typedef enum
 {
-	ccs811_mode_idle = 0, // Idle, low current mode
-	ccs811_mode_1s = 1, // Constant Power mode, IAQ values every 1 s
-	ccs811_mode_10s = 2, // Pulse Heating mode, IAQ values every 10 s
-	ccs811_mode_60s = 3, // Low Power Pulse Heating, IAQ values every 60 s
-	ccs811_mode_250ms = 4  // Constant Power mode, RAW data every 250 ms
-} ccs811_mode_t;
+	ccs811_measure_mode_idle =  0, // Idle, low current mode
+	ccs811_measure_mode_1s =    1, // Constant Power mode, IAQ values every 1 s
+	ccs811_measure_mode_10s =   2, // Pulse Heating mode, IAQ values every 10 s
+	ccs811_measure_mode_60s =   3, // Low Power Pulse Heating, IAQ values every 60 s
+	ccs811_measure_mode_250ms = 4  // Constant Power mode, RAW data every 250 ms
+} ccs811_measure_mode_t;
+
+/*
+ * Threshold ranges
+ */
+#define CCS_ECO2_RANGE_MIN 400
+#define CCS_ECO2_RANGE_MAX 8192
+#define CCS_TVOC_RANGE_MIN 0
+#define CCS_TVOC_RANGE_MAX 1187
 
 /*
  * [CCS811] Sensor instance handler
@@ -137,7 +145,7 @@ uint8_t ccs811_get_error_code(h_ccs811 *sensor);
  *
  * @return      TRUE on success, FALSE on error.
  */
-bool ccs811_set_mode(h_ccs811 sensor, ccs811_mode_t mode);
+bool ccs811_set_mode(h_ccs811 sensor, ccs811_measure_mode_t mode);
 
 /**
  * @brief	    Get latest IAQ sensor values and/or RAW sensor data
@@ -236,7 +244,7 @@ bool ccs811_set_environmental_data(h_ccs811 sensor, float temperature,
  *
  * @return      TRUE on success, FALSE on error
  */
-bool ccs811_set_interrupt(h_ccs811 sensor, bool enabled);
+bool ccs811_set_data_interrupt(h_ccs811 sensor, bool enabled);
 
 /*
  * @brief       Set eCO2 threshold mode for data ready interrupts
@@ -268,7 +276,7 @@ bool ccs811_set_interrupt(h_ccs811 sensor, bool enabled);
  *
  * @return      TRUE on success, FALSE on error
  */
-bool ccs811_set_interrupt_thresholds(
+bool ccs811_set_threshold_interrupt(
 		h_ccs811 sensor,
 		uint16_t low,
 		uint16_t high,

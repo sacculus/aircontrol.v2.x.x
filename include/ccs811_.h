@@ -111,7 +111,7 @@ typedef enum {
     ccs811_mode_10s   = 2, // Pulse Heating mode, IAQ values every 10 s
     ccs811_mode_60s   = 3, // Low Power Pulse Heating, IAQ values every 60 s
     ccs811_mode_250ms = 4  // Constant Power mode, RAW data every 250 ms
-} ccs811_mode_t;
+} ccs811_measure_mode_t;
 
 
 /**
@@ -124,7 +124,7 @@ typedef struct {
     uint8_t       bus;         // I2C bus
     uint8_t       addr;        // I2C slave address
 
-    ccs811_mode_t mode;        // operation mode
+    ccs811_measure_mode_t mode;        // operation mode
 
 } ccs811_sensor_t;
 
@@ -174,7 +174,7 @@ ccs811_sensor_t* ccs811_init_sensor (uint8_t bus, uint8_t addr);
  *
  * @return           true on success, false on error
  */
-bool ccs811_set_mode (ccs811_sensor_t* sensor, ccs811_mode_t mode);
+bool ccs811_set_mode (ccs811_sensor_t* sensor, ccs811_measure_mode_t mode);
 
 
 /**

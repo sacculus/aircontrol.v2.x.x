@@ -212,7 +212,7 @@ ccs811_sensor_t* ccs811_init_sensor (uint8_t bus, uint8_t addr)
 }
 
 
-bool ccs811_set_mode (ccs811_sensor_t* dev, ccs811_mode_t mode)
+bool ccs811_set_mode (ccs811_sensor_t* dev, ccs811_measure_mode_t mode)
 {
     ccs811_meas_mode_reg_t reg;
 
