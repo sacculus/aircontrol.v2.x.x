@@ -669,7 +669,7 @@ bool ICACHE_FLASH_ATTR ccs811_set_reg(
 		uint8_t * p_data,
 		uint8_t length)
 {
-	bool result = true;
+	bool result = false;
 
 	if (sensor == NULL)
 		return FALSE;
@@ -680,27 +680,32 @@ bool ICACHE_FLASH_ATTR ccs811_set_reg(
 	 * Disable interrupts before transaction
 	 */
 	taskENTER_CRITICAL();
+
 	/*
 	 * Start I2C transaction
 	 */
 	brzo_i2c_start_transaction(s->i2c_bus, s->i2c_address, s->i2c_frequency);
-	brzo_i2c_ack_polling(s->i2c_bus, s->i2c_ack_timeout);
+
 	/*
 	 * Send register address
 	 */
 	brzo_i2c_write(s->i2c_bus, &reg, 1, true);
+
 	/*
 	 * Send register data
 	 */
-	brzo_i2c_write(s->i2c_bus, p_data, 2, false);
+	brzo_i2c_write(s->i2c_bus, p_data, length, false);
+
 	/*
 	 * End transaction
 	 */
 	if (brzo_i2c_end_transaction(s->i2c_bus) != 0)
-		result = false;
+		result = true;
+
 	/*
 	 * Restore interrupts after transaction
 	 */
 	taskEXIT_CRITICAL();
+
 	return result;
 }
