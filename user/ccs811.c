@@ -133,14 +133,14 @@ typedef union {
 bool ccs811_get_reg(
 		ccs811_device_t *sensor,
 		uint8_t reg,
-		uint8_t length,
-		uint8_t * p_data);
+		uint8_t * p_data,
+		uint8_t length);
 
 bool ccs811_set_reg(
 		ccs811_device_t *sensor,
 		uint8_t reg,
-		uint8_t length,
-		uint8_t * p_data);
+		uint8_t * p_data,
+		uint8_t length);
 
 
 h_ccs811 ICACHE_FLASH_ATTR ccs811_setup(
@@ -177,7 +177,7 @@ h_ccs811 ICACHE_FLASH_ATTR ccs811_setup(
 			 * Send "magic" reset sequence to sensor
 			 */
 		    if (ccs811_set_reg(sensor, CCS811_REG_SW_RESET,
-		    		4, (uint8_t *) reset_sequence))
+		    		(uint8_t *) reset_sequence, 4))
 		    {
 		        /*
 		         * Wait until device boot will done after reset
@@ -195,7 +195,7 @@ h_ccs811 ICACHE_FLASH_ATTR ccs811_setup(
 		 *
 		 * Read the sensor status register
 		 */
-		if (ccs811_get_reg(sensor, CCS811_REG_STATUS, 1, &(reg_status.data)))
+		if (ccs811_get_reg(sensor, CCS811_REG_STATUS, &(reg_status.data), 1))
 		{
 			/*
 			 * Check if sensor reported an error
@@ -231,7 +231,7 @@ h_ccs811 ICACHE_FLASH_ATTR ccs811_setup(
 		/*
 		 * Get the status to check whether sensor switched to application mode
 		 */
-		if (ccs811_get_reg(sensor, CCS811_REG_STATUS, 1, &(reg_status.data)))
+		if (ccs811_get_reg(sensor, CCS811_REG_STATUS, &(reg_status.data), 1))
 		{
 			/*
 			 * Check if sensor is in application mode
@@ -243,18 +243,19 @@ h_ccs811 ICACHE_FLASH_ATTR ccs811_setup(
 				 * boot and application version
 				 */
 				if (ccs811_get_reg(sensor, CCS811_REG_HW_ID,
-						1, &(sensor->hw_id)))
+						&(sensor->hw_id), 1))
 					if (ccs811_get_reg(sensor, CCS811_REG_HW_VER,
-							1, &(sensor->hw_ver)))
+							&(sensor->hw_ver), 1))
 						if (ccs811_get_reg(sensor, CCS811_REG_FW_BOOT_VER,
-								2, (uint8_t *) &(sensor->fw_boot_ver)))
+								(uint8_t *) &(sensor->fw_boot_ver), 2))
 							if (ccs811_get_reg(sensor, CCS811_REG_FW_APP_VER,
-									2, (uint8_t *) &(sensor->fw_app_ver)))
+									(uint8_t *) &(sensor->fw_app_ver), 2))
 									return (h_ccs811) sensor;
 			}
 		}
 		os_free(sensor);
 	}
+
 	return NULL;
 }
 
@@ -283,7 +284,7 @@ bool ICACHE_FLASH_ATTR ccs811_set_mode(h_ccs811 sensor, ccs811_measure_mode_t mo
 	/*
 	 * Get current register value
 	 */
-	if (ccs811_get_reg(s, CCS811_REG_MEAS_MODE, 1, &(reg_mode.data)))
+	if (ccs811_get_reg(s, CCS811_REG_MEAS_MODE, &(reg_mode.data), 1))
 	{
 		/*
 		 * Check if new mode is different from current sensor mode
@@ -301,7 +302,7 @@ bool ICACHE_FLASH_ATTR ccs811_set_mode(h_ccs811 sensor, ccs811_measure_mode_t mo
 		/*
 		 * Write new value to sensor register
 		 */
-		if (ccs811_set_reg(s, CCS811_REG_MEAS_MODE, 1, &(reg_mode.data)))
+		if (ccs811_set_reg(s, CCS811_REG_MEAS_MODE, &(reg_mode.data), 1))
 		{
 			return true;
 		}
@@ -328,7 +329,7 @@ bool ICACHE_FLASH_ATTR ccs811_get_results(
 
 	ccs811_device_t *s = (ccs811_device_t *) sensor;
 
-	if (ccs811_get_reg(s, CCS811_REG_ALG_RESULT_DATA, 8, buff))
+	if (ccs811_get_reg(s, CCS811_REG_ALG_RESULT_DATA, buff, 8))
 	{
 		/*
 		 * 4-th byte contains value of status register
@@ -351,7 +352,7 @@ bool ICACHE_FLASH_ATTR ccs811_get_results(
 		}
 		if (reg_status.error)
 		{
-			ccs811_get_reg(s, CCS811_REG_ERROR_ID, 1, &(s->error));
+			ccs811_get_reg(s, CCS811_REG_ERROR_ID, &(s->error), 1);
 		}
 		// TODO: Process NO data state
 	}
@@ -376,7 +377,7 @@ uint32_t ICACHE_FLASH_ATTR ccs811_get_ntc_resistance(
     /*
      * Read baseline register
      */
-    if (ccs811_get_reg(s, CCS811_REG_NTC, 4, data))
+    if (ccs811_get_reg(s, CCS811_REG_NTC, data, 4))
     {
     	/*
     	 * Calculate value according to application note ams AN000372
@@ -411,7 +412,7 @@ bool ICACHE_FLASH_ATTR ccs811_set_environmental_data(
                          hum  >> 8, hum  & 0xff };
 
     // send environmental data to the sensor
-    if (ccs811_set_reg(s, CCS811_REG_ENV_DATA, 4, data))
+    if (ccs811_set_reg(s, CCS811_REG_ENV_DATA, data, 4))
     {
     	return TRUE;
     }
@@ -434,7 +435,7 @@ bool ICACHE_FLASH_ATTR ccs811_set_data_interrupt(h_ccs811 sensor, bool enabled)
     /*
      * Read current measurement mode register value
      */
-    if (ccs811_get_reg(s, CCS811_REG_MEAS_MODE, 1, (uint8_t *) &mode_reg))
+    if (ccs811_get_reg(s, CCS811_REG_MEAS_MODE, (uint8_t *) &mode_reg, 1))
     {
     	/*
     	 * There is nothing to do if interrupt flag not changes
@@ -451,7 +452,7 @@ bool ICACHE_FLASH_ATTR ccs811_set_data_interrupt(h_ccs811 sensor, bool enabled)
     	/*
     	 * Write back measurement mode register
     	 */
-    	if (ccs811_set_reg(s, CCS811_REG_MEAS_MODE, 1, (uint8_t *) &mode_reg))
+    	if (ccs811_set_reg(s, CCS811_REG_MEAS_MODE, (uint8_t *) &mode_reg, 1))
     	{
     		return TRUE;
     	}
@@ -480,7 +481,7 @@ bool ccs811_set_threshold_interrupt(
     /*
      * Read current measurement mode register value
      */
-    if (ccs811_get_reg(s, CCS811_REG_MEAS_MODE, 1, (uint8_t *) &reg_mode))
+    if (ccs811_get_reg(s, CCS811_REG_MEAS_MODE, (uint8_t *) &reg_mode, 1))
     {
     	/*
     	 * Check whether interrupt has to be enabled
@@ -488,7 +489,7 @@ bool ccs811_set_threshold_interrupt(
     	if (low && high && hysteresis)
     	{
     	    /*
-    	     * Validate ranges of threshold values
+    	     * Validate threshold values
     	     */
     	    if (low < CCS_ECO2_RANGE_MIN
     	    		|| high > CCS_ECO2_RANGE_MAX
@@ -508,11 +509,11 @@ bool ccs811_set_threshold_interrupt(
     	    /*
     	     * Write new threshold values into register
     	     */
-    	    if (ccs811_set_reg(s, CCS811_REG_THRESHOLDS, 5, buff))
+    	    if (ccs811_set_reg(s, CCS811_REG_THRESHOLDS, buff, 5))
     	    {
     	    	reg_mode.int_dataready = 1;
     	    	reg_mode.int_threshold = 1;
-    	    	if (ccs811_set_reg(s, CCS811_REG_MEAS_MODE, 1, (uint8_t *) &reg_mode))
+    	    	if (ccs811_set_reg(s, CCS811_REG_MEAS_MODE, (uint8_t *) &reg_mode, 1))
     	    		return TRUE;
     	    }
     	}
@@ -521,6 +522,7 @@ bool ccs811_set_threshold_interrupt(
         	/*
         	 * One or more values is zero - threshold interrupt should be disabled
         	 */
+
     	    /*
     	     * Clean values in buffer
     	     */
@@ -533,10 +535,13 @@ bool ccs811_set_threshold_interrupt(
     	    /*
     	     * Write zero values into threshold register
     	     */
-    	    if (ccs811_set_reg(s, CCS811_REG_THRESHOLDS, 5, buff))
+    	    if (ccs811_set_reg(s, CCS811_REG_THRESHOLDS, buff, 5))
     	    {
+    	    	/*
+    	    	 * Disable threshold interrupt
+    	    	 */
     	    	reg_mode.int_threshold = 0;
-    	    	if (ccs811_set_reg(s, CCS811_REG_MEAS_MODE, 1, (uint8_t *) &reg_mode))
+    	    	if (ccs811_set_reg(s, CCS811_REG_MEAS_MODE, (uint8_t *) &reg_mode, 1))
     	    		return TRUE;
     	    }
     	}
@@ -560,7 +565,10 @@ uint16_t ICACHE_FLASH_ATTR ccs811_get_baseline(h_ccs811 sensor)
 		  uint16_t w;
 	} buff;
 
-	if (ccs811_get_ntc_reg(s, CCS811_REG_BASELINE, 2, buff.b))
+	/*
+	 * Read current baseline from sensor
+	 */
+	if (ccs811_get_reg(s, CCS811_REG_BASELINE, buff.b, 2))
 	{
 		return buff.w;
 	}
@@ -585,7 +593,10 @@ bool ICACHE_FLASH_ATTR ccs811_set_baseline(h_ccs811 sensor, uint16_t baseline)
 
 	buff.w = baseline;
 
-	if (ccs811_get_ntc_reg(s, CCS811_REG_BASELINE, 2, buff.b))
+	/*
+	 * Write saved baseline value to sensor
+	 */
+	if (ccs811_set_reg(s, CCS811_REG_BASELINE, buff.b, 2))
 	{
 		return TRUE;
 	}
@@ -597,29 +608,31 @@ bool ICACHE_FLASH_ATTR ccs811_set_baseline(h_ccs811 sensor, uint16_t baseline)
 bool ICACHE_FLASH_ATTR ccs811_get_reg(
 		ccs811_device_t * sensor,
 		uint8_t reg,
-		uint8_t length,
-		uint8_t * p_data)
+		uint8_t * p_data,
+		uint8_t length)
 {
 	bool result = false;
-	uint8_t buff[8];
 
 	if (sensor == NULL)
 		return FALSE;
 
 	ccs811_device_t *s = (ccs811_device_t *) sensor;
+
 	/*
 	 * Disable interrupts before transaction
 	 */
 	taskENTER_CRITICAL();
+
 	/*
 	 * Start I2C transaction
 	 */
 	brzo_i2c_start_transaction(s->i2c_bus, s->i2c_address, s->i2c_frequency);
-	brzo_i2c_ack_polling(s->i2c_bus, s->i2c_ack_timeout);
+
 	/*
 	 * Send register address
 	 */
 	brzo_i2c_write(s->i2c_bus, &reg, 1, false);
+
 	/*
 	 * End transaction
 	 */
@@ -630,30 +643,31 @@ bool ICACHE_FLASH_ATTR ccs811_get_reg(
 		 */
 		brzo_i2c_start_transaction(s->i2c_bus, s->i2c_address,
 				s->i2c_frequency);
-		brzo_i2c_ack_polling(s->i2c_bus, s->i2c_ack_timeout);
+
 		/*
 		 * Receive register data first byte (MSB)
 		 */
-		brzo_i2c_read(s->i2c_bus, buff, 2, false);
+		brzo_i2c_read(s->i2c_bus, p_data, length, false);
+
 		/*
 		 * End transaction
 		 */
 		if (brzo_i2c_end_transaction(s->i2c_bus) == 0)
-			*p_data = ((uint16_t) buff[0] << 8 & 0xff00) | buff[1];
-		result = true;
+			result = true;
 	}
 	/*
 	 * Restore interrupts after transaction
 	 */
 	taskEXIT_CRITICAL();
+
 	return result;
 }
 
 bool ICACHE_FLASH_ATTR ccs811_set_reg(
 		ccs811_device_t *sensor,
 		uint8_t reg,
-		uint8_t length,
-		uint8_t * p_data)
+		uint8_t * p_data,
+		uint8_t length)
 {
 	bool result = true;
 

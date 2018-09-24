@@ -121,8 +121,10 @@ bool ICACHE_FLASH_ATTR hdc1080_get_reg(h_hdc1080 sensor, uint8_t reg,
 		 * End transaction
 		 */
 		if (brzo_i2c_end_transaction(s->i2c_bus) == 0)
+		{
 			*pData = ((uint16_t) buff[0] << 8 & 0xff00) | buff[1];
-		result = true;
+			result = true;
+		}
 	}
 	/*
 	 * Restore interrupts after transaction
