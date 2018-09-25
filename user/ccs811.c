@@ -291,7 +291,7 @@ bool ICACHE_FLASH_ATTR ccs811_set_mode(h_ccs811 sensor, ccs811_measure_mode_t mo
 		 */
 		if (mode == reg_mode.mode)
 		{
-			return true;
+			return TRUE;
 		}
 
 		/*
@@ -304,11 +304,11 @@ bool ICACHE_FLASH_ATTR ccs811_set_mode(h_ccs811 sensor, ccs811_measure_mode_t mo
 		 */
 		if (ccs811_set_reg(s, CCS811_REG_MEAS_MODE, &(reg_mode.data), 1))
 		{
-			return true;
+			return TRUE;
 		}
 	}
 
-	return false;
+	return FALSE;
 }
 
 bool ICACHE_FLASH_ATTR ccs811_get_results(
@@ -601,7 +601,7 @@ bool ICACHE_FLASH_ATTR ccs811_set_baseline(h_ccs811 sensor, uint16_t baseline)
 		return TRUE;
 	}
 
-	return false;
+	return FALSE;
 }
 
 
@@ -611,7 +611,7 @@ bool ICACHE_FLASH_ATTR ccs811_get_reg(
 		uint8_t * p_data,
 		uint8_t length)
 {
-	bool result = false;
+	bool result = FALSE;
 
 	if (sensor == NULL)
 		return FALSE;
@@ -631,7 +631,7 @@ bool ICACHE_FLASH_ATTR ccs811_get_reg(
 	/*
 	 * Send register address
 	 */
-	brzo_i2c_write(s->i2c_bus, &reg, 1, false);
+	brzo_i2c_write(s->i2c_bus, &reg, 1, FALSE);
 
 	/*
 	 * End transaction
@@ -647,13 +647,13 @@ bool ICACHE_FLASH_ATTR ccs811_get_reg(
 		/*
 		 * Receive register data first byte (MSB)
 		 */
-		brzo_i2c_read(s->i2c_bus, p_data, length, false);
+		brzo_i2c_read(s->i2c_bus, p_data, length, FALSE);
 
 		/*
 		 * End transaction
 		 */
 		if (brzo_i2c_end_transaction(s->i2c_bus) == 0)
-			result = true;
+			result = TRUE;
 	}
 	/*
 	 * Restore interrupts after transaction
@@ -669,7 +669,7 @@ bool ICACHE_FLASH_ATTR ccs811_set_reg(
 		uint8_t * p_data,
 		uint8_t length)
 {
-	bool result = false;
+	bool result = FALSE;
 
 	if (sensor == NULL)
 		return FALSE;
@@ -689,18 +689,18 @@ bool ICACHE_FLASH_ATTR ccs811_set_reg(
 	/*
 	 * Send register address
 	 */
-	brzo_i2c_write(s->i2c_bus, &reg, 1, true);
+	brzo_i2c_write(s->i2c_bus, &reg, 1, TRUE);
 
 	/*
 	 * Send register data
 	 */
-	brzo_i2c_write(s->i2c_bus, p_data, length, false);
+	brzo_i2c_write(s->i2c_bus, p_data, length, FALSE);
 
 	/*
 	 * End transaction
 	 */
 	if (brzo_i2c_end_transaction(s->i2c_bus) != 0)
-		result = true;
+		result = TRUE;
 
 	/*
 	 * Restore interrupts after transaction
